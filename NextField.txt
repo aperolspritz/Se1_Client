@@ -1,0 +1,153 @@
+package KI;
+
+import java.util.List;
+
+import messagesBase.messagesFromClient.EMove;
+import messagesBase.messagesFromClient.ETerrain;
+import messagesBase.messagesFromServer.FullMapNode;
+
+public class CalculateNextNode {
+
+	private EMove move = EMove.Right;
+	boolean is20x5 = false;
+
+	public boolean getis20x5() {
+		return this.is20x5;
+	}
+
+	public EMove getMove() {
+		return this.move;
+	}
+
+	private boolean checkWater(List<FullMapNode> fullMap, int x, int y) {
+		for (FullMapNode node : fullMap) {
+			if (node.getX() == x && node.getY() == y && node.getTerrain() != ETerrain.Water)
+				return true;
+		}
+		return false;
+	}
+
+	private boolean checkCoordinates(int x, int y) {
+		if (is20x5) {
+			if (x > 19 || x < 0 || y > 4 || y < 0)
+				return false;
+		} else {
+			if (x > 9 || x < 0 || y > 9 || y < 0)
+				return false;
+		}
+		return true;
+
+	}
+
+	private boolean isValid(List<FullMapNode> fullMap, int x, int y) {
+
+		boolean help = checkCoordinates(x, y);
+
+		help = checkWater(fullMap, x, y);
+
+		return help;
+	}
+
+	private void chooseFromAdj(List<FullMapNode> fullMap, EMove m, FullMapNode currPos) {
+
+		if (m == EMove.Down || m == EMove.Up) {
+			if (isValid(fullMap, currPos.getX() - 1, currPos.getY())) {
+				this.move = EMove.Left;
+				return;
+			}
+
+			if (isValid(fullMap, currPos.getX() + 1, currPos.getY())) {
+				this.move = EMove.Right;
+				return;
+			} else {
+				this.move = m == EMove.Down ? EMove.Up : EMove.Down;
+				return;
+			}
+		}
+
+		if (m == EMove.Left || m == EMove.Right) {
+
+			if (isValid(fullMap, currPos.getX(), currPos.getY() - 1)) {
+				this.move = EMove.Up;
+				return;
+			}
+
+			if (isValid(fullMap, currPos.getX(), currPos.getY() + 1)) {
+				this.move = EMove.Down;
+				return;
+
+			} else {
+				this.move = m == EMove.Left ? EMove.Right : EMove.Left;
+				return;
+			}
+		}
+	}
+
+	private void alternativeRoute(List<FullMapNode> fullMap, FullMapNode currPos, EMove m) {
+
+		chooseFromAdj(fullMap, m, currPos);
+	}
+
+	private void checkMap(List<FullMapNode> fullMap) {
+
+		for (FullMapNode node : fullMap) {
+			if (node.getX() > 9) {
+				is20x5 = true;
+				return;
+			}
+		}
+	}
+
+	public void setDiffs(FullMapNode targetNode, FullMapNode currPos, List<FullMapNode> fullMap) {
+		int x = currPos.getX();
+		int y = currPos.getY();
+		checkMap(fullMap);
+		if (currPos.getY() < targetNode.getY()) {
+			boolean he = isValid(fullMap, x, y + 1);
+			if (he) {
+				this.move = EMove.Down;
+				return;
+			} else {
+				alternativeRoute(fullMap, currPos, EMove.Down);
+				return;
+			}
+		}
+
+		if (currPos.getY() > targetNode.getY()) {
+			boolean he = isValid(fullMap, x, y - 1);
+			if (he) {
+				this.move = EMove.Up;
+				return;
+			} else {
+				alternativeRoute(fullMap, currPos, EMove.Up);
+				return;
+			}
+		}
+
+		if (currPos.getX() > targetNode.getX()) {
+			boolean he = isValid(fullMap, x - 1, y);
+			if (he) {
+				this.move = EMove.Left;
+				return;
+			} else {
+				alternativeRoute(fullMap, currPos, EMove.Left);
+				return;
+			}
+		}
+
+		if (currPos.getX() < targetNode.getX()) {
+			boolean he = isValid(fullMap, x + 1, y);
+			if (he) {
+				this.move = EMove.Right;
+				return;
+			} else {
+				alternativeRoute(fullMap, currPos, EMove.Right);
+				return;
+			}
+		}
+
+	}
+
+	/////////////////////////////////////////////////
+
+}
